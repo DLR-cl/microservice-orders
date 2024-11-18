@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Producto {
+  id_producto  Int    @id @default(autoincrement())
+  nombre_prod  String @db.VarChar(150)
+  precio_venta Int
+
+  ventas Venta_Producto[]
+}
+
+model Venta_Producto {
+  id_producto Int
+  id_venta    Int
+  cantidad    Int
+  valor_total Int
+  venta       Venta    @relation(fields: [id_venta], references: [id_venta])
+  producto    Producto @relation(fields: [id_producto], references: [id_producto])
+
+  @@id([id_producto, id_venta])
+}
+
+model Venta {
+  id_venta    Int @id @default(autoincrement())
+  id_cliente  Int
+  total_venta Int
+
+  venta_producto Venta_Producto[]
+  pedido         Pedido?
+  cliente        Cliente          @relation(fields: [id_cliente], references: [id_cliente])
+}
+
+model Cliente {
+  id_cliente Int    @id @default(autoincrement())
+  direccion  String @db.VarChar(200)
+  telefono   String @db.VarChar(9)
+
+  ventas Venta[]
+}
+
+model Pedido {
+  id_pedido      Int       @id @default(autoincrement())
+  id_venta       Int       @unique
+  estado         Estado    @default(PENDIENTE)
+  fecha_creacion DateTime  @db.Date
+  fecha_fin      DateTime? @db.Date
+
+  venta Venta @relation(fields: [id_venta], references: [id_venta])
+}
+
+enum Estado {
+  PENDIENTE
+  EN_TRANSITO
+  ENTREGADO
+  CANCELADO
+}
